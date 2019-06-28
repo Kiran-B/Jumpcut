@@ -49,11 +49,8 @@
 	NSDictionary *standardPreferences;
     int jcDisplayNum;
 	BOOL issuedRememberResizeWarning;
-    unsigned vMajor, vMinor, vBugFix;
+    NSInteger vMajor, vMinor, vBugFix;
 }
-
-// Utility method
--(void) getSystemVersionMajor:(unsigned *)major minor:(unsigned *)minor bugFix:(unsigned *)bugFix;
 
 // Basic functionality
 -(void) pollPB:(NSTimer *)timer;
