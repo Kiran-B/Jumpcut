@@ -21,6 +21,9 @@ This repo makes the app 64-bit compatible and thus support macOS Catalina. I lov
 
 [ ] Update image assets to support Retina screen, if anyone could contribute image assets. 
 
-### Build:
+## Build:
 
 Use Xcode 10.2.1
+
+## Download pre-built binary:
+Download Jumpcut.app.zip from [here](https://github.com/Kiran-B/Jumpcut/releases)
