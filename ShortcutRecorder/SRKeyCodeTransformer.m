@@ -54,6 +54,9 @@ static NSArray              *padKeysArray        = nil;
 		@"F14", SRInt(107),
 		@"F15", SRInt(113),
 		@"F16", SRInt(106),
+		@"F17", SRInt(64),
+		@"F18", SRInt(79),
+		@"F19", SRInt(80),
 		SRLoc(@"Space"), SRInt(49),
 		SRChar(KeyboardDeleteLeftGlyph), SRInt(51),
 		SRChar(KeyboardDeleteRightGlyph), SRInt(117),
@@ -96,6 +99,8 @@ static NSArray              *padKeysArray        = nil;
     // generate the string to keycode mapping dict...
     stringToKeyCodeDict = [[NSMutableDictionary alloc] init];
     [self regenerateStringToKeyCodeMapping];
+
+	[[NSDistributedNotificationCenter defaultCenter] addObserver:self selector:@selector(regenerateStringToKeyCodeMapping) name:(NSString*)kTISNotifySelectedKeyboardInputSourceChanged object:nil];
 }
 
 //---------------------------------------------------------- 
@@ -114,6 +119,26 @@ static NSArray              *padKeysArray        = nil;
     return [NSString class];
 }
 
+
+//---------------------------------------------------------- 
+//  init
+//---------------------------------------------------------- 
+- (id)init
+{
+	if((self = [super init]))
+	{
+	}
+	return self;
+}
+
+//---------------------------------------------------------- 
+//  dealloc
+//---------------------------------------------------------- 
+- (void)dealloc
+{
+	[super dealloc];
+}
+
 //---------------------------------------------------------- 
 //  transformedValue: 
 //---------------------------------------------------------- 
@@ -123,7 +148,7 @@ static NSArray              *padKeysArray        = nil;
         return nil;
     
     // Can be -1 when empty
-    signed short keyCode = [value shortValue];
+    NSInteger keyCode = [value shortValue];
 	if ( keyCode < 0 ) return nil;
 	
 	// We have some special gylphs for some special keys...
@@ -131,61 +156,47 @@ static NSArray              *padKeysArray        = nil;
 	if ( unmappedString != nil ) return unmappedString;
 	
 	BOOL isPadKey = [padKeysArray containsObject: SRInt( keyCode )];	
-	KeyboardLayoutRef currentLayoutRef;
-	KeyboardLayoutKind currentLayoutKind;
-    OSStatus err;
 	
-	err = KLGetCurrentKeyboardLayout( &currentLayoutRef );
-    if (err != noErr) return nil;
+	OSStatus err;
+	TISInputSourceRef tisSource = TISCopyCurrentKeyboardInputSource();
+	if(!tisSource) return nil;
 	
-	err = KLGetKeyboardLayoutProperty( currentLayoutRef, kKLKind,(const void **)&currentLayoutKind );
-	if ( err != noErr ) return nil;
-    
+	CFDataRef layoutData;
 	UInt32 keysDown = 0;
+	layoutData = (CFDataRef)TISGetInputSourceProperty(tisSource, kTISPropertyUnicodeKeyLayoutData);
 	
-	if ( currentLayoutKind == kKLKCHRKind )
-	{
-		Handle kchrHandle;
-        
-		err = KLGetKeyboardLayoutProperty( currentLayoutRef, kKLKCHRData, (const void **)&kchrHandle );
-		if ( err != noErr ) return nil;
-		
-		UInt32 charCode = KeyTranslate( kchrHandle, keyCode, &keysDown );
-		
-		if (keysDown != 0) charCode = KeyTranslate( kchrHandle, keyCode, &keysDown );
-		
-        char theChar = ( charCode & 0x00FF );
-		
-		NSString *keyString = [[[[NSString alloc] initWithData:[NSData dataWithBytes:&theChar length:1] encoding:NSMacOSRomanStringEncoding] autorelease] uppercaseString];
-		
-        return ( isPadKey ? [NSString stringWithFormat: SRLoc(@"Pad %@"), keyString] : keyString );
+	CFRelease(tisSource);
+	
+	// For non-unicode layouts such as Chinese, Japanese, and Korean, get the ASCII capable layout
+	if(!layoutData) {
+		tisSource = TISCopyCurrentASCIICapableKeyboardLayoutInputSource();
+		layoutData = (CFDataRef)TISGetInputSourceProperty(tisSource, kTISPropertyUnicodeKeyLayoutData);
+		CFRelease(tisSource);
 	}
-	else // kKLuchrKind, kKLKCHRuchrKind
-	{
-		UCKeyboardLayout *keyboardLayout = NULL;
-		err = KLGetKeyboardLayoutProperty( currentLayoutRef, kKLuchrData, (const void **)&keyboardLayout );
-		if ( err != noErr ) return nil;
-		
-		UniCharCount length = 4, realLength;
-        UniChar chars[4];
-        
-        err = UCKeyTranslate( keyboardLayout, 
-                              keyCode,
-                              kUCKeyActionDisplay,
-                              0,
-                              LMGetKbdType(),
-                              kUCKeyTranslateNoDeadKeysBit,
-                              &keysDown,
-                              length,
-                              &realLength,
-                              chars);
-        
-		NSString *keyString = [[NSString stringWithCharacters:chars length:1] uppercaseString];
-		
-        return ( isPadKey ? [NSString stringWithFormat: SRLoc(@"Pad %@"), keyString] : keyString );
-	}
-    
-	return nil;    
+
+	if (!layoutData) return nil;
+	
+	const UCKeyboardLayout *keyLayout = (const UCKeyboardLayout *)CFDataGetBytePtr(layoutData);
+	
+	UniCharCount length = 4, realLength;
+	UniChar chars[4];
+	
+	err = UCKeyTranslate( keyLayout, 
+						 keyCode,
+						 kUCKeyActionDisplay,
+						 0,
+						 LMGetKbdType(),
+						 kUCKeyTranslateNoDeadKeysBit,
+						 &keysDown,
+						 length,
+						 &realLength,
+						 chars);
+	
+	if ( err != noErr ) return nil;
+	
+	NSString *keyString = [[NSString stringWithCharacters:chars length:1] uppercaseString];
+	
+	return ( isPadKey ? [NSString stringWithFormat: SRLoc(@"Pad %@"), keyString] : keyString );
 }
 
 //---------------------------------------------------------- 
@@ -215,10 +226,10 @@ static NSArray              *padKeysArray        = nil;
     [stringToKeyCodeDict removeAllObjects];
     
     // loop over every keycode (0 - 127) finding its current string mapping...
-	unsigned i;
+	NSUInteger i;
     for ( i = 0U; i < 128U; i++ )
     {
-        NSNumber *keyCode = [NSNumber numberWithUnsignedInt:i];
+        NSNumber *keyCode = [NSNumber numberWithUnsignedInteger:i];
         NSString *string = [transformer transformedValue:keyCode];
         if ( ( string ) && ( [string length] ) )
         {

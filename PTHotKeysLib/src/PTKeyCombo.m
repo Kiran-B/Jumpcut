@@ -7,15 +7,7 @@
 //
 
 #import "PTKeyCombo.h"
-
 #import "PTKeyCodeTranslator.h"
-
-#if __PROTEIN__
-#else
-#define _PTLocalizedString NSLocalizedString
-#endif
-
-#import <Carbon/Carbon.h>
 
 @implementation PTKeyCombo
 
@@ -24,28 +16,28 @@
 	return [self keyComboWithKeyCode: -1 modifiers: -1];
 }
 
-+ (id)keyComboWithKeyCode: (int)keyCode modifiers: (int)modifiers
++ (id)keyComboWithKeyCode: (NSInteger)keyCode modifiers: (NSUInteger)modifiers
 {
 	return [[[self alloc] initWithKeyCode: keyCode modifiers: modifiers] autorelease];
 }
 
-- (id)initWithKeyCode: (int)keyCode modifiers: (int)modifiers
+- (id)initWithKeyCode: (NSInteger)keyCode modifiers: (NSUInteger)modifiers
 {
 	self = [super init];
-	
+
 	if( self )
 	{
 		mKeyCode = keyCode;
 		mModifiers = modifiers;
 	}
-	
+
 	return self;
 }
 
 - (id)initWithPlistRepresentation: (id)plist
 {
 	int keyCode, modifiers;
-	
+
 	if( !plist || ![plist count] )
 	{
 		keyCode = -1;
@@ -54,8 +46,8 @@
 	else
 	{
 		keyCode = [[plist objectForKey: @"keyCode"] intValue];
-		if( keyCode <= 0 ) keyCode = -1;
-	
+		if( keyCode < 0 ) keyCode = -1;
+
 		modifiers = [[plist objectForKey: @"modifiers"] intValue];
 		if( modifiers <= 0 ) modifiers = -1;
 	}
@@ -66,8 +58,8 @@
 - (id)plistRepresentation
 {
 	return [NSDictionary dictionaryWithObjectsAndKeys:
-				[NSNumber numberWithInt: [self keyCode]], @"keyCode",
-				[NSNumber numberWithInt: [self modifiers]], @"modifiers",
+				[NSNumber numberWithInteger: [self keyCode]], @"keyCode",
+				[NSNumber numberWithInteger: [self modifiers]], @"modifiers",
 				nil];
 }
 
@@ -84,12 +76,12 @@
 
 #pragma mark -
 
-- (int)keyCode
+- (NSInteger)keyCode
 {
 	return mKeyCode;
 }
 
-- (int)modifiers
+- (NSUInteger)modifiers
 {
 	return mModifiers;
 }
@@ -112,49 +104,37 @@
 
 + (NSString*)_stringForModifiers: (long)modifiers
 {
-	static long modToChar[4][2] =
+	static unichar modToChar[4][2] =
 	{
-		{ cmdKey, 		0x23180000 },
-		{ optionKey,	0x23250000 },
-		{ controlKey,	0x005E0000 },
-		{ shiftKey,		0x21e70000 }
+		{ cmdKey, 		kCommandUnicode },
+		{ optionKey,	kOptionUnicode },
+		{ controlKey,	kControlUnicode },
+		{ shiftKey,		kShiftUnicode }
 	};
 
-	NSString* str = nil;
-	NSString* charStr;
+	NSString* str = [NSString string];
 	long i;
-
-	str = [NSString string];
 
 	for( i = 0; i < 4; i++ )
 	{
 		if( modifiers & modToChar[i][0] )
-		{
-			charStr = [NSString stringWithCharacters: (const unichar*)&modToChar[i][1] length: 1];
-			str = [str stringByAppendingString: charStr];
-		}
+			str = [str stringByAppendingString: [NSString stringWithCharacters: &modToChar[i][1] length: 1]];
 	}
-	
-	if( !str )
-		str = @"";
-	
+
 	return str;
 }
 
 + (NSDictionary*)_keyCodesDictionary
 {
 	static NSDictionary* keyCodes = nil;
-	
+
 	if( keyCodes == nil )
 	{
-		NSString* path;
-		NSString* contents;
-		
-		path = [[NSBundle bundleForClass: self] pathForResource: @"PTKeyCodes" ofType: @"plist"];
-		contents = [NSString stringWithContentsOfFile: path];
+		NSURL *url = [NSURL fileURLWithPath:[[NSBundle bundleForClass: self] pathForResource: @"PTKeyCodes" ofType: @"plist"]];
+		NSString *contents = [NSString stringWithContentsOfURL:url encoding:NSUTF8StringEncoding error:NULL];
 		keyCodes = [[contents propertyList] retain];
 	}
-	
+
 	return keyCodes;
 }
 
@@ -162,13 +142,13 @@
 {
 	id key;
 	NSString* str;
-	
+
 	key = [NSString stringWithFormat: @"%d", keyCode];
 	str = [dict objectForKey: key];
-	
+
 	if( !str )
 		str = [NSString stringWithFormat: @"%X", keyCode];
-	
+
 	return str;
 }
 
@@ -178,25 +158,25 @@
 	NSString* keyCodeStr;
 	NSDictionary* unmappedKeys;
 	NSArray* padKeys;
-	
+
 	keyCodeStr = [NSString stringWithFormat: @"%d", keyCode];
-	
+
 	//Handled if its not handled by translator
 	unmappedKeys = [dict objectForKey:@"unmappedKeys"];
 	result = [unmappedKeys objectForKey: keyCodeStr];
 	if( result )
 		return result;
-	
+
 	//Translate it
 	result = [[[PTKeyCodeTranslator currentTranslator] translateKeyCode:keyCode] uppercaseString];
-	
+
 	//Handle if its a key-pad key
 	padKeys = [dict objectForKey:@"padKeys"];
 	if( [padKeys indexOfObject: keyCodeStr] != NSNotFound )
 	{
 		result = [NSString stringWithFormat:@"%@ %@", [dict objectForKey:@"padKeyString"], result];
 	}
-	
+
 	return result;
 }
 
@@ -211,10 +191,43 @@
 	return [self _stringForKeyCode: keyCode newKeyCodeMap: dict];
 }
 
+- (NSString*)keyCodeString
+{
+	// special case: the modifiers for the "clear" key are 0x0
+	if ( [self isClearCombo] ) return @"";
+
+    return [[self class] _stringForKeyCode:[self keyCode]];
+}
+
+- (NSUInteger)modifierMask
+{
+	// special case: the modifiers for the "clear" key are 0x0
+	if ( [self isClearCombo] ) return 0;
+
+	static NSUInteger modToChar[4][2] =
+	{
+		{ cmdKey, 		NSCommandKeyMask },
+		{ optionKey,	NSAlternateKeyMask },
+		{ controlKey,	NSControlKeyMask },
+		{ shiftKey,		NSShiftKeyMask }
+	};
+
+    NSUInteger i, ret = 0;
+
+    for ( i = 0; i < 4; i++ )
+    {
+        if ( [self modifiers] & modToChar[i][0] ) {
+            ret |= modToChar[i][1];
+        }
+    }
+
+    return ret;
+}
+
 - (NSString*)description
 {
 	NSString* desc;
-	
+
 	if( [self isValidHotKeyCombo] ) //This might have to change
 	{
 		desc = [NSString stringWithFormat: @"%@%@",
@@ -222,7 +235,9 @@
 				[[self class] _stringForKeyCode: [self keyCode]]];
 	}
 	else
-		desc = _PTLocalizedString( @"(None)", @"Hot Keys: Key Combo text for 'empty' combo" );
+	{
+		desc = NSLocalizedString( @"(None)", @"Hot Keys: Key Combo text for 'empty' combo" );
+	}
 
 	return desc;
 }
