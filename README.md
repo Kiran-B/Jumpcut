@@ -33,8 +33,6 @@ More details here: https://support.apple.com/kb/ph25088
 A pictorial version is available here: https://www.imore.com/how-open-apps-unidentified-developers-mac
 
 ## TODO:
-[ ] Support paste from menu selection
-
 [ ] Explore generation of a code-signed/notarized build 
 
 [ ] Distribution via Homebrew
