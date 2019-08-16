@@ -32,6 +32,23 @@ More details here: https://support.apple.com/kb/ph25088
 
 A pictorial version is available here: https://www.imore.com/how-open-apps-unidentified-developers-mac
 
+## Additional permissions:
+Jumpcut does not need special macOS permission to track and record global clipboard. But, Jumpcut makes use of accessibility APIs to paste recorded content on to the current app. When you use this feature for the first time, macOS (for obvious security and privacy reason) puts up an alert. The alert seeks your permission to allow Jumpcut to use the accessibility feature. I recommend you to review this [Apple Support document](https://support.apple.com/guide/mac-help/mh43185/mac) for more information.
+
+If you had denied the permission, you could change it. Open System Preferences, click Privacy, click Accessibility, then select the app’s checkbox. Unselect the app’s checkbox to remove the permission anytime.
+
+Paste workflow without the accessibility permission:
+- Use paste shortcut one or more time to chose the content you want to paste. 
+- Wait for the bezel to fade off and let the current app gain focus
+- Use paste shortcut of the app
+
+Paste workflow with the accessibility permission:
+- Use paste shortcut one or more time to chose the content you want to paste. The last chosen content will paste onto the current app.
+
+Hints:
+- When the paste bezel is active, use arrow keys to chose previous or next clipboard.
+- App allows pasting previous content from the Jumpcut menu. For this, enable 'Menu selection paste' in preferences.
+
 ## TODO:
 [ ] Explore generation of a code-signed/notarized build 
 
