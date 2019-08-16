@@ -19,18 +19,25 @@ Note: I have tested this only in Mojave and Catalina.
 
 ## Install:
 
+There are two ways you could get this app installed in your Mac. If you are comfortable with Apple's developer's tools, you may build and run the app. Otherwise, download the pre-built binaries.
+
 1. Build and run:
 - Get [Xcode 10.2.1](https://developer.apple.com/download/)
 - Download the [code](https://github.com/Kiran-B/Jumpcut/archive/0.0.66.tar.gz) and build/run the app.
-2. Allow the app to run accepting the risk that it was from an unidentified developer. Here is how you may do it:
-- control-click (right-click) the app icon, then choose Open from the contextual menu.
-- You would see an alert that says Jumpcut is from an unidentified developer. Click `Open` in the alert.
+2. Use pre-built binaries
+- Download latest Jumpcut.app.zip from [here](https://github.com/Kiran-B/Jumpcut/releases)
+- Allow the app to run accepting the risk that it was from an unidentified developer. Here is how you may do it:
+  - control-click (right-click) the app icon, then choose Open from the contextual menu.
+  - You would see an alert that says Jumpcut is from an unidentified developer. Click `Open` in the alert.
 
 The above step will be a one time thing.
 
 More details here: https://support.apple.com/kb/ph25088 
 
 A pictorial version is available here: https://www.imore.com/how-open-apps-unidentified-developers-mac
+
+Note:
+If the downloaded zip/tar file presents itself as an app and that alarms you, do read [this](https://github.com/Kiran-B/Jumpcut/issues/3).
 
 ## Additional permissions:
 Jumpcut does not need special macOS permission to track and record global clipboard. But, Jumpcut makes use of accessibility APIs to paste recorded content on to the current app. When you use this feature for the first time, macOS (for obvious security and privacy reason) puts up an alert. The alert seeks your permission to allow Jumpcut to use the accessibility feature. I recommend you to review this [Apple Support document](https://support.apple.com/guide/mac-help/mh43185/mac) for more information.
