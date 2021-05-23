@@ -1,5 +1,5 @@
 # Jumpcut
-A minimalist application to provide clipboard buffering for macOS written by snarkout.
+A minimalist application to provide clipboard buffering for macOS written by [Steve Cook](https://github.com/snark).
 
 This repo is an import from https://sourceforge.net/projects/jumpcut/
 
@@ -8,9 +8,15 @@ For more details, please see the original project page.
 Retaining the license of the original author, which is MIT license. All credits goes to the original author.
 
 ## Purpose:
-The original app served me well as it worked well until macOS Mojave. When I switched to macOS Catalina, this was the app that I immediately missed. Hence this repo. 
+The original app was 32-bit only. It served me well until macOS Mojave. When I switched to macOS Catalina, this was the app that I immediately missed. Hence this repo. 
 
-This repo makes the app 64-bit compatible and thus supports macOS Catalina. I love this app for its minimalism and thus I would not attempt to add features. 
+This repo makes the app 64-bit compatible and thus supports macOS Catalina. I love this app for its minimalism and thus I would not add features. 
+
+#### IMPORTANT UPDATE:
+The original author, [Steve Cook](https://github.com/snark) has recently moved the project to Github and has added 64-bit support to the app. So if you are here looking for the Jumpcut app, please check out https://github.com/snark/jumpcut
+
+#### Why not delete this repo?
+I shall keep this repo for self reference. And just in case the original app loses its minimalism, I could always use this as a fallback 😊 
 
 ## Compatibility:
 macOS 10.6 (Snow Leopard) ~ 10.15 (macOS Catalina)
